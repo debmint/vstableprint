@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!ELEMENT config (defaultcell?,pageheader?,dochead?,(group|body))>
+<!ELEMENT pageheader (font?,cell*)>    <!-- A row to print at the top of each page -->
+<!ELEMENT dochead (font?,cell*)>       <!-- A row to print as a Title at the begin of the document -->
+<!ELEMENT boxed (cell*)>
+<!-- The <defaultcell> can be used to define a default for cell properties -->
+<!ELEMENT defaultcell (font)>
+<!ELEMENT footer (cell*)>            <!-- A row to be printed below the block -->
+<!ELEMENT header (cell*)>            <!-- A row to be printed at begin of group -->  
+<!ELEMENT subheader (cell*)>         <!-- A second header row to print below the <header> -->
+
+<!--
+    Group defines a grouping for the printout.  Normally this will be a group defined by a key in the
+    Hashtable (a column for a database result), and all Items in the Arraylist with the same value for
+    this key will be printed, then the next set of matching values, etc.
+    Its suggested that the <header> group will contain a single cell displaying the value from this
+    key (column).
+    The Subheader is a second printed row, which might be used to print a row of column headings
+-->
+
+<!ELEMENT group (header?,subheader?,(group|body),footer?,boxed?)>
+<!ELEMENT cell (src,font?)>
+<!ELEMENT font EMPTY>
+<!ELEMENT body (header?,cell*)>
+<!ELEMENT src EMPTY>
+
+<!-- Attributes for the <group> Element
+    "grpsrc" - The name of the source Column for this group
+    ** The following applies to any block that uses these parameters **
+    "pointsabove" (optional) - the space to allocate above this block
+    "pointsbelow" (optional) - The space to allocate below this block
+-->
+
+<!ATTLIST body pointsabove CDATA #IMPLIED
+               pointsbelow CDATA #IMPLIED
+>
+
+<!ATTLIST group grpsrc CDATA #REQUIRED
+                pointsabove CDATA #IMPLIED
+                pointsbelow CDATA #IMPLIED
+                splitgroup (yes|no) #IMPLIED
+                boxed (heavy|light|double) #IMPLIED
+    >
+
+<!ATTLIST header pointsabove CDATA #IMPLIED
+                 pointsbelow CDATA #IMPLIED
+                 lineabove (yes|no) #IMPLIED
+                 linebelow (yes|no) #IMPLIED
+    >
+
+<!ATTLIST subheader pointsabove CDATA #IMPLIED
+                    pointsbelow CDATA #IMPLIED
+                    lineabove (yes|no) #IMPLIED
+                    linebelow (yes|no) #IMPLIED
+    >
+
+<!ATTLIST pageheader pointsabove CDATA #IMPLIED
+                     pointsbelow CDATA #IMPLIED
+                     lineabove (yes|no) #IMPLIED
+                     linebelow (yes|no) #IMPLIED
+    >
+
+<!ATTLIST dochead pointsabove CDATA #IMPLIED
+                  pointsbelow CDATA #IMPLIED
+                  lineabove (yes|no) #IMPLIED
+                  linebelow (yes|no) #IMPLIED
+    >
+
+<!--  Cell Attributes
+      "Percent" - the percent of the printable line this cell will use
+      "align"   - The text alignment to for this cell (default = "left"
+-->
+<!ATTLIST cell percent CDATA "100"
+               align (l|left|c|center|r|right) "l"
+               lindent CDATA #IMPLIED
+    >
+
+<!ATTLIST font name CDATA "Verdana"
+               size CDATA #IMPLIED
+               underline (yes|no) #IMPLIED
+               bold (yes|no) #IMPLIED
+               strikethrough (yes|no) #IMPLIED
+               italic (yes|no) #IMPLIED
+    >
+
+<!ATTLIST src type CDATA #REQUIRED
+              value CDATA #REQUIRED
+    >
