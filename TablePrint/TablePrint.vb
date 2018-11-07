@@ -39,9 +39,9 @@ Public Class TblPrn
     'Private tableprintdtd As String
 
     Private Enum GRP_TYPE As Integer
-            GpTyGrp
-            GpTyHdr
-        End Enum
+        GpTyGrp
+        GpTyHdr
+    End Enum
 
     Public Sub New()
         initGrpAttList()            ' Initialize grpAttribList
@@ -231,20 +231,22 @@ Public Class TblPrn
     '''     for the printout
     ''' </remarks>
 
-    Public Sub config_from_file(fn As String)
+    Public Function config_from_file(fn As String)
+        Dim rslt As Boolean
         'create_DTD("TblPrint.dtd")
 
         Using fs = New FileStream(fn, IO.FileMode.Open)
             Dim settings As New XmlReaderSettings()
-            settings.DtdProcessing = DtdProcessing.Parse
-            settings.ValidationType = ValidationType.DTD
+            'settings.DtdProcessing = DtdProcessing.Parse
+            'settings.ValidationType = ValidationType.DTD
             reader = XmlReader.Create(fs, settings)
-            buildConfigFromReader()
+            rslt = buildConfigFromReader()
             reader.Close()
             fs.Close()
         End Using
 
-    End Sub
+        Return rslt
+    End Function
 
     ''' <summary>
     ''' Reads in the XML printout specifications from a string
@@ -255,17 +257,19 @@ Public Class TblPrn
     '''     for the printout.
     ''' </remarks>
 
-    Public Sub config_from_string(xmlString As String)
+    Public Function config_from_string(xmlString As String)
+        Dim rslt As Boolean
         ' Create the XmlReader object.
         Dim settings As New XmlReaderSettings()
-        settings.DtdProcessing = DtdProcessing.Parse
-        settings.ValidationType = ValidationType.DTD
+        'settings.DtdProcessing = DtdProcessing.Parse
+        'settings.ValidationType = ValidationType.DTD
         'create_DTD("TblPrint.dtd")
 
         reader = XmlReader.Create(New StringReader(xmlString), settings)
-        buildConfigFromReader()
+        rslt = buildConfigFromReader()
         reader.Close()
-    End Sub
+        Return rslt
+    End Function
 
     ''' <summary>
     ''' Sub to fill the config data using the reader created by the config_from_* () sub
@@ -274,7 +278,7 @@ Public Class TblPrn
     '''    This sub uses the global XmlReader "reader" created in the calling sub
     ''' </remarks>
 
-    Private Sub buildConfigFromReader()
+    Private Function buildConfigFromReader() As Boolean
         Dim prevGrp As Hashtable = Nothing    ' The previous (parent) group
 
         If IsNothing(PrintConfig) Then
@@ -296,7 +300,7 @@ Public Class TblPrn
 
         If Not reader.Name.Equals("config") Then
             MessageBox.Show("The first element must be <config>, not " & reader.Name)
-            Return
+            Return False
         End If
 
         PrintConfig.Add("parent", Nothing)
@@ -321,13 +325,34 @@ Public Class TblPrn
 
                         Exit Select
                     Else            ' Anything but <config>
-                        If InConfig = False Then
-                            MessageBox.Show("Must be inside the <config> Element", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop)
-                            ' Throw exception?
+                        If reader.Name.Equals("font") Then
+                            Select Case prevGrp("name")
+                                Case "pageheader", "header", "defaultcell", "body", "cell", "src", "dochead"
+                                    ' No statements - these are the valid parents
+                                Case Else
+                                    MessageBox.Show(String.Format("<{0}> cannot be a parent for <font>",
+                                                        prevGrp("name")))
+                                    Return Nothing
+                            End Select
+
+                            Dim newFont As Font = addFont(prevGrp("name"))
+
+                            If Not IsNothing(newFont) Then
+                                prevGrp("font") = (newFont)
+                            End If
+                            Continue While
+                        Else
+                            If InConfig = False Then
+                                MessageBox.Show("Must be inside the <config> Element", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop)
+                                ' Throw exception?
+                            End If
                         End If
                     End If      ' End if reader.Name.Equals("config")
 
                     Dim ng As Object = addGroup(prevGrp)
+                    If IsNothing(ng) Then
+                        Return False
+                    End If
 
                     If Not IsNothing(ng) Then
                         ' We don't need to add a grpLvl if the element is of the form "<.... />"
@@ -350,7 +375,8 @@ Public Class TblPrn
         End While
 
         'showPrintConfig()       ' For Debugging ...
-    End Sub
+        Return True
+    End Function
 
     ' ******************************************************************************
     ' setGrpAttribs() - Reads the Attibutes for an Element and stores them into a
@@ -488,6 +514,64 @@ Public Class TblPrn
         Return Nothing
     End Function
 
+    Private Function elementVerify(child As String, parent As String) As Boolean
+        Select Case parent
+            Case "font", "src"
+                MessageBox.Show(String.Format("<{0}>:  <{1}> has no children", child, parent), "ERROR!")
+                Return False
+        End Select
+
+        Select Case child
+            Case "config"
+                If reader.Depth = 1 Then
+                    Return True
+                Else
+                    MessageBox.Show(String.Format("<config> must be top-level, not child of <{0}>", parent))
+                    Return False
+                End If
+            Case "pageheader", "dochead", "defaultcell"
+                If parent.Equals("config") Then
+                    Return True
+                End If
+            Case "group", "body"
+                Dim p As String() = {"config", "group"}
+                If p.Contains(parent) Then
+                    Return True
+                End If
+            Case "cell"
+                Dim p As String() = {"pageheader", "dochead", "group", "body", "header"}
+                If p.Contains(parent) Then
+                    Return True
+                End If
+            Case "src"
+                If parent.Equals("cell") Then
+                    Return True
+                End If
+            Case "header", "footer"
+                Dim p As String() = {"group", "body"}
+                If p.Contains(parent) Then
+                    Return True
+                End If
+            Case "font"
+                ' <font> is available almost everywhere
+                Dim p As String() = {"config"}
+                If Not p.Contains(parent) Then
+                    Return True
+                End If
+            Case "boxed"
+                Dim p As String() = {"group", "body"}
+                If p.Contains(parent) Then
+                    Return True
+                End If
+            Case Else
+                MessageBox.Show(String.Format("<{0}> is not a valid element", child), "ERROR!")
+                Return False
+        End Select
+
+        MessageBox.Show(String.Format("<{0}> is not a child of <{1}>", child, parent), "ERROR!")
+        Return False
+    End Function
+
     ' ******************************************************************************
     ' addGroup() - Add a group or  to the list of the elements in the config
     '       This includes all types : <group>, <header>, <footer>, etc
@@ -509,6 +593,9 @@ Public Class TblPrn
     ''' </remarks>
 
     Private Function addGroup(parentGrp As Hashtable) As Hashtable
+        If Not elementVerify(reader.Name, parentGrp("name")) Then
+            Return Nothing
+        End If
         Dim newGrp As Hashtable = Nothing
 
         Select Case reader.Name
@@ -532,20 +619,6 @@ Public Class TblPrn
                         parentGrp(newGrp("name")) = newGrp
                 End Select
             Case "font"
-                Select Case parentGrp("name")
-                    Case "pageheader", "header", "defaultcell", "body", "cell", "src", "dochead"
-                        ' No statements - these are the valid parents
-                    Case Else
-                        MessageBox.Show(String.Format("<{0}> cannot be a parent for <font>",
-                                                        parentGrp("name")))
-                        Return Nothing
-                End Select
-
-                Dim newFont As Font = addFont(parentGrp("name"))
-
-                If Not IsNothing(newFont) Then
-                    parentGrp("font") = (newFont)
-                End If
             Case "cell"
                 Select Case parentGrp("name")
                     Case "pageheader", "header", "subheader", "defaultcell", "body", "src", "dochead"
@@ -1025,25 +1098,25 @@ Public Class TblPrn
     ''' <remarks></remarks>
 
     Public ReadOnly Property PrntDoc As PrintDocument
-            Get
-                Return Me.prnDoc
-            End Get
-        End Property
+        Get
+            Return Me.prnDoc
+        End Get
+    End Property
 
-        ' ******************************************************************************
-        ' addDefaults() - Sets the defaults for the config
-        ' ******************************************************************************
+    ' ******************************************************************************
+    ' addDefaults() - Sets the defaults for the config
+    ' ******************************************************************************
 
-        Private Sub addDefaults()
-            Dim attribs() As String = {"font", "lindent", "rindent", "attribs"}
-        End Sub
+    Private Sub addDefaults()
+        Dim attribs() As String = {"font", "lindent", "rindent", "attribs"}
+    End Sub
 
-        ' ******************************************************************************
-        ' addPagehdr() - Add a Page Header to the list of the elements in the config
-        ' ******************************************************************************
+    ' ******************************************************************************
+    ' addPagehdr() - Add a Page Header to the list of the elements in the config
+    ' ******************************************************************************
 
-        Private Sub addPagehdr()
-            Dim attribs() As String = {}
-        End Sub
+    Private Sub addPagehdr()
+        Dim attribs() As String = {}
+    End Sub
 
-    End Class
+End Class
