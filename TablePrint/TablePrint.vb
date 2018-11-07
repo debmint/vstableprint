@@ -539,7 +539,7 @@ Public Class TblPrn
                     Return True
                 End If
             Case "cell"
-                Dim p As String() = {"pageheader", "dochead", "group", "body", "header"}
+                Dim p As String() = {"pageheader", "dochead", "group", "body", "header", "subheader"}
                 If p.Contains(parent) Then
                     Return True
                 End If
@@ -547,7 +547,7 @@ Public Class TblPrn
                 If parent.Equals("cell") Then
                     Return True
                 End If
-            Case "header", "footer"
+            Case "header", "subheader", "footer"
                 Dim p As String() = {"group", "body"}
                 If p.Contains(parent) Then
                     Return True
