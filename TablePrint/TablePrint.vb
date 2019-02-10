@@ -44,7 +44,7 @@ Public Class TblPrn
     End Enum
 
     Public Sub New()
-        initGrpAttList()            ' Initialize grpAttribList
+        InitGrpAttList()            ' Initialize grpAttribList
         prnDoc = New PrintDocument()
 
         ' Set up some Default Page Settings
@@ -62,7 +62,7 @@ Public Class TblPrn
     ''' </summary>
     ''' <remarks></remarks>
 
-    Private Sub initGrpAttList()
+    Private Sub InitGrpAttList()
         Dim cellAtt() As String = {"percent", "font", "align", "attribs", "src", "align"}
         Dim grpAtt() As String = {"grpsrc", "split_grp", "header", "footer", "pointsabove", "pointsbelow",
                                     "lindent", "rindent", "font", "grpsrc", "pointsabove", "pointsbelow",
@@ -80,7 +80,7 @@ Public Class TblPrn
         End With
     End Sub
 
-    Private Sub showPrintConfig()
+    Private Sub ShowPrintConfig()
         Dim lvl As Hashtable = New Hashtable
         Dim msg As String = ""
         Dim indent As String = ""
@@ -122,7 +122,7 @@ Public Class TblPrn
     '''     for the printout
     ''' </remarks>
 
-    Public Function config_from_file(fn As String)
+    Public Function Config_from_file(fn As String)
         Dim rslt As Boolean
         'create_DTD("TblPrint.dtd")
 
@@ -131,7 +131,7 @@ Public Class TblPrn
             'settings.DtdProcessing = DtdProcessing.Parse
             'settings.ValidationType = ValidationType.DTD
             reader = XmlReader.Create(fs, settings)
-            rslt = buildConfigFromReader()
+            rslt = BuildConfigFromReader()
             reader.Close()
             fs.Close()
         End Using
@@ -148,7 +148,7 @@ Public Class TblPrn
     '''     for the printout.
     ''' </remarks>
 
-    Public Function config_from_string(xmlString As String)
+    Public Function Config_from_string(xmlString As String)
         Dim rslt As Boolean
         ' Create the XmlReader object.
         Dim settings As New XmlReaderSettings()
@@ -157,7 +157,7 @@ Public Class TblPrn
         'create_DTD("TblPrint.dtd")
 
         reader = XmlReader.Create(New StringReader(xmlString), settings)
-        rslt = buildConfigFromReader()
+        rslt = BuildConfigFromReader()
         reader.Close()
         Return rslt
     End Function
@@ -169,7 +169,7 @@ Public Class TblPrn
     '''    This sub uses the global XmlReader "reader" created in the calling sub
     ''' </remarks>
 
-    Private Function buildConfigFromReader() As Boolean
+    Private Function BuildConfigFromReader() As Boolean
         Dim prevGrp As Hashtable = Nothing    ' The previous (parent) group
 
         If IsNothing(PrintConfig) Then
@@ -226,7 +226,7 @@ Public Class TblPrn
                                     Return Nothing
                             End Select
 
-                            Dim newFont As Font = addFont(prevGrp("name"))
+                            Dim newFont As Font = AddFont(prevGrp("name"))
 
                             If Not IsNothing(newFont) Then
                                 prevGrp("font") = (newFont)
@@ -240,7 +240,7 @@ Public Class TblPrn
                         End If
                     End If      ' End if reader.Name.Equals("config")
 
-                    Dim ng As Object = addGroup(prevGrp)
+                    Dim ng As Object = AddGroup(prevGrp)
                     If IsNothing(ng) Then
                         Return False
                     End If
@@ -265,12 +265,12 @@ Public Class TblPrn
             End Select
         End While
 
-        'showPrintConfig()       ' For Debugging ...
+        'ShowPrintConfig()       ' For Debugging ...
         Return True
     End Function
 
     ' ******************************************************************************
-    ' setGrpAttribs() - Reads the Attibutes for an Element and stores them into a
+    ' SetGrpAttribs() - Reads the Attibutes for an Element and stores them into a
     '       newly-created HashTable, keyed by the Attribute Name
     '
     ' Passed:   (1) attribs - Array containing list of permissible attributes
@@ -286,7 +286,7 @@ Public Class TblPrn
     ''' value is the value from the XML table.
     ''' </remarks>
     ''' 
-    Private Function setGrpAttribs() As Hashtable
+    Private Function SetGrpAttribs() As Hashtable
         Dim cellSpec = New Hashtable()
 
         If reader.HasAttributes() Then
@@ -312,7 +312,7 @@ Public Class TblPrn
                                     cellSpec(attr) = StringAlignment.Near
                             End Select
                         Case "underline", "bold", "italic", "strikethrough"
-                            MessageBox.Show("We have Font Styles being checked in the ""setGrpAttribs()"" function")
+                            MessageBox.Show("We have Font Styles being checked in the ""SetGrpAttribs()"" function")
                             If Not cellSpec.Contains("style") Then
                                 cellSpec("style") = New FontStyle()
                                 cellSpec("style") = FontStyle.Regular
@@ -358,7 +358,7 @@ Public Class TblPrn
     ''' <returns>The new font if valid parameters are provided, else Nothing</returns>
     ''' <remarks></remarks>
 
-    Private Function addFont(parentName As String) As Font
+    Private Function AddFont(parentName As String) As Font
         Dim fontAttribs() As String = {"name", "size", "style"}
         Dim fam As String = CType(PrintConfig("defaultcell")("font"), Font).Name
         Dim size As Single = CType(PrintConfig("defaultcell")("font"), Font).Size
@@ -405,7 +405,7 @@ Public Class TblPrn
         Return Nothing
     End Function
 
-    Private Function elementVerify(child As String, parent As String) As Boolean
+    Private Function ElementVerify(child As String, parent As String) As Boolean
         Select Case parent
             Case "font", "src"
                 MessageBox.Show(String.Format("<{0}>:  <{1}> has no children", child, parent), "ERROR!")
@@ -464,7 +464,7 @@ Public Class TblPrn
     End Function
 
     ' ******************************************************************************
-    ' addGroup() - Add a group or  to the list of the elements in the config
+    ' AddGroup() - Add a group or  to the list of the elements in the config
     '       This includes all types : <group>, <header>, <footer>, etc
     '       On entry, the reader is positioned at the StartElement
     ' ******************************************************************************
@@ -483,8 +483,8 @@ Public Class TblPrn
     ''' reset the pointer to the "previous" group to be this
     ''' </remarks>
 
-    Private Function addGroup(parentGrp As Hashtable) As Hashtable
-        If Not elementVerify(reader.Name, parentGrp("name")) Then
+    Private Function AddGroup(parentGrp As Hashtable) As Hashtable
+        If Not ElementVerify(reader.Name, parentGrp("name")) Then
             Return Nothing
         End If
         Dim newGrp As Hashtable = Nothing
@@ -499,7 +499,7 @@ Public Class TblPrn
 
         Select Case reader.Name
             Case "group", "body", "header", "subheader", "dochead", "src"
-                newGrp = setGrpAttribs()
+                newGrp = SetGrpAttribs()
                 newGrp("name") = reader.Name
                 newGrp("parent") = parentGrp
 
@@ -522,7 +522,7 @@ Public Class TblPrn
                     parentGrp.Add("cells", New ArrayList())
                 End If
 
-                newGrp = setGrpAttribs()
+                newGrp = SetGrpAttribs()
                 newGrp("name") = reader.Name
                 CType(parentGrp.Item("cells"), ArrayList).Add(newGrp)
             'newGrp = Nothing    ' We don't need to return the cell def
@@ -539,7 +539,7 @@ Public Class TblPrn
                 tmpCell = Nothing
                 newGrp = PrintConfig("defaultcell")
             Case "pageheader"
-                newGrp = setGrpAttribs()
+                newGrp = SetGrpAttribs()
                 newGrp("name") = reader.Name
                 parentGrp(reader.Name) = newGrp
                 newGrp("parent") = parentGrp
@@ -550,7 +550,7 @@ Public Class TblPrn
     End Function
 
     ''' <summary>
-    ''' render_report() - The entry pointy rendering the entire report
+    ''' Render_report() - The entry pointy rendering the entire report
     ''' </summary>
     ''' <param name="dataRows">
     ''' The ArrayList containing the rows of the Query result
@@ -559,9 +559,9 @@ Public Class TblPrn
     ''' Each Object in the ArrayList is a Hashtable keyed by the column names
     ''' </remarks>
 
-    Public Sub render_report(dataRows As ArrayList)
+    Public Sub Render_report(dataRows As ArrayList)
         allData = dataRows
-        AddHandler prnDoc.PrintPage, AddressOf Me.prnDoc_PrintPage
+        AddHandler prnDoc.PrintPage, AddressOf Me.PrnDoc_PrintPage
 
         Dim pd As New PrintDialog()
         pd.Document = prnDoc
@@ -582,7 +582,7 @@ Public Class TblPrn
         End If
     End Sub
 
-    Private Sub process_page(ev As PrintPageEventArgs)
+    Private Sub Process_page(ev As PrintPageEventArgs)
         Dim curLevel As Hashtable = PrintConfig
         Dim pgMaxIdx As Integer
 
@@ -596,12 +596,12 @@ Public Class TblPrn
         ' Print PageHeader
         If curLevel.Contains("pageheader") Then
             ' TODO: Set up Attributes
-            yPos += render_row_cells(curLevel("pageheader"), ev)
+            yPos += Render_row_cells(curLevel("pageheader"), ev)
         End If
 
         If curRow = 0 Then
             If curLevel.Contains("dochead") Then
-                yPos += render_row_cells(curLevel("dochead"), ev)
+                yPos += Render_row_cells(curLevel("dochead"), ev)
             End If
         End If
 
@@ -618,10 +618,10 @@ Public Class TblPrn
             curLevel = curLevel("subgroup")
 
             If curLevel("name").Equals("group") Then
-                process_group(curLevel, pgMaxIdx, ev)
+                Process_group(curLevel, pgMaxIdx, ev)
             Else
                 'ElseIf curLevel("name") = "body" Then
-                process_body(curLevel, pgMaxIdx, ev)
+                Process_body(curLevel, pgMaxIdx, ev)
                 'Else
                 '    MessageBox.Show("""" & curLevel("name") & """ is not a valid printing group")
                 '    ev.HasMorePages = False
@@ -640,7 +640,7 @@ Public Class TblPrn
     ''' page, etc
     ''' </remarks>
 
-    Private Sub prnDoc_PrintPage(ByVal sender As Object, ByVal ev As PrintPageEventArgs)
+    Private Sub PrnDoc_PrintPage(ByVal sender As Object, ByVal ev As PrintPageEventArgs)
 
         ' On first page, do a dry run through the entire dataset to determine the total
         ' pages and fine-tune the pagination
@@ -649,7 +649,7 @@ Public Class TblPrn
             inPass2 = False
 
             While curRow < allData.Count
-                process_page(ev)
+                Process_page(ev)
                 pageIndexes.Add(curRow)
                 curPage += 1
             End While
@@ -660,7 +660,7 @@ Public Class TblPrn
             curRow = 0
         End If
 
-        process_page(ev)
+        Process_page(ev)
         curPage += 1
 
 
@@ -675,7 +675,7 @@ Public Class TblPrn
         End If
     End Sub
 
-    Private Sub tpDoBox(myTop As Integer, boxType As String, ev As PrintPageEventArgs)
+    Private Sub TpDoBox(myTop As Integer, boxType As String, ev As PrintPageEventArgs)
         Dim myPen As New Pen(Color.Black)
 
         yPos += 5     ' Allow a little more space at the bottom
@@ -711,7 +711,7 @@ Public Class TblPrn
     '''   and then it recursuvely calls itself for a subgroup until a &lt;body&gt; is encountered.
     ''' </remarks>
 
-    Private Sub process_group(myLvl As Hashtable, maxRow As Integer, ev As PrintPageEventArgs)
+    Private Sub Process_group(myLvl As Hashtable, maxRow As Integer, ev As PrintPageEventArgs)
         ' TODO: process attributes
         Dim myRow As Hashtable = allData(curRow)
         Dim grpMax As Integer = curRow
@@ -727,12 +727,12 @@ Public Class TblPrn
 
             ' Render the main header
             If myLvl.Contains("header") Then
-                yPos += render_row_cells(myLvl("header"), ev)
+                yPos += Render_row_cells(myLvl("header"), ev)
             End If
 
             ' Render the Subheader if applicable
             If myLvl.Contains("subheader") Then
-                yPos += render_row_cells(myLvl("subheader"), ev)
+                yPos += Render_row_cells(myLvl("subheader"), ev)
             End If
 
             ' Find index of last row fitting into this group
@@ -747,17 +747,17 @@ Public Class TblPrn
             If myLvl.Contains("subgroup") Then
                 If CType(myLvl("subgroup"), Hashtable)("name").Equals("group") Then
 
-                    process_group(myLvl("subgroup"), grpMax, ev)
+                    Process_group(myLvl("subgroup"), grpMax, ev)
 
                     If (yPos >= yMax) Or (curRow >= allData.Count) Then
                         Exit Sub
                     End If
                 Else    ' It must be <body>
-                    process_body(myLvl("subgroup"), grpMax, ev)
+                    Process_body(myLvl("subgroup"), grpMax, ev)
 
                     If (yPos >= yMax) Or (curRow >= allData.Count) Then
                         If (myLvl.Contains("boxed")) Then
-                            tpDoBox(grpTop, myLvl("boxed"), ev)
+                            TpDoBox(grpTop, myLvl("boxed"), ev)
 
                             If BoxLvl > 0 Then
                                 BoxLvl -= 1
@@ -770,7 +770,7 @@ Public Class TblPrn
             End If
 
             If (myLvl.Contains("boxed")) Then
-                tpDoBox(grpTop, myLvl("boxed"), ev)
+                TpDoBox(grpTop, myLvl("boxed"), ev)
             End If
 
             If myLvl.Contains("splitgroup") Then
@@ -791,8 +791,8 @@ Public Class TblPrn
     ''' <param name="ev">The PrintPageEventArgs for the PrintDocument</param>
     ''' <remarks></remarks>
 
-    Private Sub process_body(myLvl As Hashtable, maxRow As Integer, ev As PrintPageEventArgs)
-        Dim cellWidths As ArrayList = calcCellAryWidths(myLvl("cells"), ev.MarginBounds.Width)
+    Private Sub Process_body(myLvl As Hashtable, maxRow As Integer, ev As PrintPageEventArgs)
+        Dim cellWidths As ArrayList = CalcCellAryWidths(myLvl("cells"), ev.MarginBounds.Width)
 
         ' Unless we have only a single row to print, don't print a single row by itself on the bottom line.
         ' In this case, bump yPos up past the limit and return
@@ -805,7 +805,7 @@ Public Class TblPrn
 
         ' Render the main header
         If myLvl.Contains("header") Then
-            yPos += render_row_cells(myLvl("header"), ev)
+            yPos += Render_row_cells(myLvl("header"), ev)
         End If
 
 
@@ -817,7 +817,7 @@ Public Class TblPrn
                 Exit Sub
             End If
 
-            yPos += render_row_cells(myLvl, ev)
+            yPos += Render_row_cells(myLvl, ev)
             curRow += 1
         Next
     End Sub
@@ -830,7 +830,7 @@ Public Class TblPrn
     ''' <returns>The ArrayList containing the widths</returns>
     ''' <remarks></remarks>
 
-    Private Function calcCellAryWidths(cA As ArrayList, totWidth As Single) As ArrayList
+    Private Function CalcCellAryWidths(cA As ArrayList, totWidth As Single) As ArrayList
         Dim widthAry As New ArrayList()
 
         For c As Integer = 0 To cA.Count - 1
@@ -851,7 +851,7 @@ Public Class TblPrn
     ''' handle all this itself but we'll leave it like this as it's possible that
     ''' some future modification might not want yPos updated for some reason,</remarks>
 
-    Private Function render_row_cells(curgrp As Hashtable, ev As PrintPageEventArgs) As Single
+    Private Function Render_row_cells(curgrp As Hashtable, ev As PrintPageEventArgs) As Single
         Dim maxHeight As Single = 0
         Dim addHeight As Single = 0
         Dim rowTop As Single = yPos
@@ -888,7 +888,7 @@ Public Class TblPrn
                 cellRect.X += cellRect.Width
                 cellRect.Width = CType(cellAry(c)("percent"), Single) *
                     (ev.MarginBounds.Right - (BoxLvl * 20) - ev.MarginBounds.Left) / 100
-                Dim cH As Single = render_cell(curgrp("name"), cellAry(c), cellRect, fnt, ev)
+                Dim cH As Single = RenderCell(curgrp("name"), cellAry(c), cellRect, fnt, ev)
 
                 If cH > maxHeight Then
                     maxHeight = cH
@@ -914,7 +914,7 @@ Public Class TblPrn
         Return maxHeight + addHeight
     End Function
 
-    Private Function render_cell(grpTyp As String, cellAry As Hashtable,
+    Private Function RenderCell(grpTyp As String, cellAry As Hashtable,
                                      ByVal cellRect As RectangleF, parntFont As Font, ev As PrintPageEventArgs) As Single
         ' TODO set up attributes
         Dim fnt As Font
@@ -995,10 +995,10 @@ Public Class TblPrn
     End Property
 
     ' ******************************************************************************
-    ' addDefaults() - Sets the defaults for the config
+    ' AddDefaults() - Sets the defaults for the config
     ' ******************************************************************************
 
-    Private Sub addDefaults()
+    Private Sub AddDefaults()
         Dim attribs() As String = {"font", "lindent", "rindent", "attribs"}
     End Sub
 
