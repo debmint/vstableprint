@@ -563,9 +563,10 @@ Public Class TblPrn
         allData = dataRows
         AddHandler prnDoc.PrintPage, AddressOf Me.PrnDoc_PrintPage
 
-        Dim pd As New PrintDialog()
-        pd.Document = prnDoc
-        pd.AllowSomePages = True
+        Dim pd As New PrintDialog With {
+            .Document = prnDoc,
+            .AllowSomePages = True
+        }
         Dim rslt As DialogResult = pd.ShowDialog()
 
         If rslt = DialogResult.OK Then
@@ -969,8 +970,9 @@ Public Class TblPrn
             End If
 
             If cellAry.Contains("align") Then
-                Dim sFmt As StringFormat = New StringFormat()
-                sFmt.Alignment = cellAry("align")
+                Dim sFmt As StringFormat = New StringFormat With {
+                    .Alignment = cellAry("align")
+                }
                 ev.Graphics.DrawString(str, fnt, New SolidBrush(Color.Black), cellRect, sFmt)
                 sFmt.Dispose()
             Else
@@ -1002,11 +1004,11 @@ Public Class TblPrn
         Dim attribs() As String = {"font", "lindent", "rindent", "attribs"}
     End Sub
 
-    ' ******************************************************************************
-    ' addPagehdr() - Add a Page Header to the list of the elements in the config
-    ' ******************************************************************************
+    ''' <summary>
+    ''' Add a Page Header to the list of the elements in the config
+    ''' </summary>
 
-    Private Sub addPagehdr()
+    Private Sub AddPagehdr()
         Dim attribs() As String = {}
     End Sub
 
