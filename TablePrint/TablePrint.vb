@@ -13,14 +13,13 @@ Imports System.Windows.Forms
 ''' </remarks>
 '''
 
-
 Public Class TblPrn
     ' PrintConfig: ArrayList containing groups with print Data
     Private PrintConfig As Hashtable ' The formatting definition
     Private reader As XmlReader
     Private InConfig As Boolean = False ' Flag that we've encountered the <config> element
     ' grpAttribList: Hashtable keyed by element name, value= Array of legal attrib names
-    Private grpAttribList As Hashtable = New Hashtable()
+    Private ReadOnly grpAttribList As Hashtable = New Hashtable()
     Private grpLvls As ArrayList = New ArrayList()
 
     ' This block of variables are those used by the PrintDocument functions
@@ -31,7 +30,7 @@ Public Class TblPrn
     Private pgHeight As Single
     Private yMax As Single
     Private curRow As Integer
-    Private rowHeight As Integer = 20
+    Private ReadOnly rowHeight As Integer = 20
     Private pageIndexes As ArrayList = New ArrayList()
     Dim inPass2 As Boolean
     Dim curPage As Integer
@@ -269,15 +268,8 @@ Public Class TblPrn
         Return True
     End Function
 
-    ' ******************************************************************************
-    ' SetGrpAttribs() - Reads the Attibutes for an Element and stores them into a
-    '       newly-created HashTable, keyed by the Attribute Name
-    '
-    ' Passed:   (1) attribs - Array containing list of permissible attributes
-    ' Returns:  The newly-created HashTable (possibly empty) containing all specified attribs
-    ' ******************************************************************************
     ''' <summary>
-    ''' setGrpAttribs() - Reads the Attributes for an Element and stores them into a
+    ''' Reads the Attributes for an Element and stores them into a
     ''' Hashtable (initialized here in this function).
     ''' </summary>
     ''' <returns>The newly-created Hashtable (possibly empty, containing all
@@ -293,8 +285,6 @@ Public Class TblPrn
             Dim myAttribs = grpAttribList(reader.Name)      ' For convenience
             Dim oldname As String = reader.Name
 
-            'For a As Integer = 0 To myAttribs.GetUpperBound(0)
-            'For a As Integer = 0 To reader.AttributeCount
             While reader.MoveToNextAttribute()
 
                 Dim attr As String = StrConv(reader.Name, VbStrConv.Lowercase)
@@ -463,13 +453,8 @@ Public Class TblPrn
         Return False
     End Function
 
-    ' ******************************************************************************
-    ' AddGroup() - Add a group or  to the list of the elements in the config
-    '       This includes all types : <group>, <header>, <footer>, etc
-    '       On entry, the reader is positioned at the StartElement
-    ' ******************************************************************************
     ''' <summary>
-    ''' addGroup() - Add a new group to the list of Elements in the config
+    ''' Add a new group to the list of Elements in the config
     ''' </summary>
     ''' <param name="parentGrp">The group definition Hashtable for the parent of this Element
     ''' </param>
@@ -550,7 +535,7 @@ Public Class TblPrn
     End Function
 
     ''' <summary>
-    ''' Render_report() - The entry pointy rendering the entire report
+    ''' The entry pointy rendering the entire report
     ''' </summary>
     ''' <param name="dataRows">
     ''' The ArrayList containing the rows of the Query result
@@ -847,10 +832,12 @@ Public Class TblPrn
     ''' <param name="curgrp">The Hashtable defining this current group</param>
     ''' <param name="ev">The PrintPageEventArgs</param>
     ''' <returns>The total units to add to the yPos</returns>
-    ''' <remarks>This function returns all the units to be added to yPos and
-    ''' the caller is responsible for updating this value.  This function could
-    ''' handle all this itself but we'll leave it like this as it's possible that
-    ''' some future modification might not want yPos updated for some reason,</remarks>
+    ''' <remarks>
+    '''   This function returns all the units to be added to yPos and the caller is
+    '''   responsible for updating this value.  This function could handle all this
+    '''   itself but we'll leave it like this as it's possible that some future
+    '''   modification might not want yPos updated for some reason,
+    ''' </remarks>
 
     Private Function Render_row_cells(curgrp As Hashtable, ev As PrintPageEventArgs) As Single
         Dim maxHeight As Single = 0
@@ -915,8 +902,21 @@ Public Class TblPrn
         Return maxHeight + addHeight
     End Function
 
-    Private Function RenderCell(grpTyp As String, cellAry As Hashtable,
-                                     ByVal cellRect As RectangleF, parntFont As Font, ev As PrintPageEventArgs) As Single
+    ''' <summary>
+    ''' Render a single cell
+    ''' </summary>
+    ''' <param name="grpTyp">The Parent type, e.g. Group,Body,etc</param>
+    ''' <param name="cellAry">The Hashtable defining this cell</param>
+    ''' <param name="cellRect">The Rectangle this cell occupies</param>
+    ''' <param name="parntFont">The Font of the parent - inherited if none defined for this cell</param>
+    ''' <param name="ev">The PrintPageEventArgs</param>
+    ''' <returns>
+    '''   The height of this cell - the tallest cell in the row determines the height
+    '''   of the row
+    ''' </returns>
+
+    Private Function RenderCell(grpTyp As String, cellAry As Hashtable, ByVal cellRect As RectangleF,
+                                parntFont As Font, ev As PrintPageEventArgs) As Single
         ' TODO set up attributes
         Dim fnt As Font
         Dim str As String = ""
@@ -992,7 +992,7 @@ Public Class TblPrn
 
     Public ReadOnly Property PrntDoc As PrintDocument
         Get
-            Return Me.prnDoc
+            Return prnDoc
         End Get
     End Property
 
