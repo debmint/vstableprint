@@ -121,7 +121,7 @@ Public Class TblPrn
     '''     for the printout
     ''' </remarks>
 
-    Public Function Config_from_file(fn As String)
+    Public Function Config_from_file(fn As String) As Boolean
         Dim rslt As Boolean
         'create_DTD("TblPrint.dtd")
 
@@ -132,7 +132,6 @@ Public Class TblPrn
             reader = XmlReader.Create(fs, settings)
             rslt = BuildConfigFromReader()
             reader.Close()
-            fs.Close()
         End Using
 
         Return rslt
@@ -147,7 +146,7 @@ Public Class TblPrn
     '''     for the printout.
     ''' </remarks>
 
-    Public Function Config_from_string(xmlString As String)
+    Public Function Config_from_string(xmlString As String) As Boolean
         Dim rslt As Boolean
         ' Create the XmlReader object.
         Dim settings As New XmlReaderSettings()
@@ -974,7 +973,7 @@ Public Class TblPrn
                     .Alignment = cellAry("align")
                 }
                 ev.Graphics.DrawString(str, fnt, New SolidBrush(Color.Black), cellRect, sFmt)
-                sFmt.Dispose()
+                'sFmt.Dispose()
             Else
                 ev.Graphics.DrawString(str, fnt, New SolidBrush(Color.Black), cellRect)
             End If
