@@ -1,0 +1,4 @@
+A library to do tabular hardcopy printouts.  This library can be linked
+to a Visual Studio project to do printouts.
+
+The output layout is defined by an xml file.
